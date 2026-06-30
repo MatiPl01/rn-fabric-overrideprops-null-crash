@@ -31,11 +31,12 @@ Line `1331` is the `transform` assert; the analogous `opacity` assert is line `1
    ```
 3. The Home screen shows a blue box running a native-driver (`useNativeDriver: true`) `Animated`
    transform.
-4. Tap **"Go to Details"** - pushes a screen with `animation: 'slide_from_right'`.
+4. Tap **"Go to Details"** - this removes the transform from the still-mounted box and pushes a
+   screen with `animation: 'slide_from_right'`.
 5. The app crashes with the `AssertionError` above, during the navigation transition.
 
-See [`App.tsx`](./App.tsx). The Home screen renders the transform only while focused; navigating
-away removes it.
+See [`App.tsx`](./App.tsx). The transform is dropped in the same press handler that navigates, so the
+still-mounted box receives `transform: null`.
 
 ## Root cause
 
@@ -43,8 +44,8 @@ RN 0.86 enables the feature flag `overrideBySynchronousMountPropsAtMountingAndro
 
 1. Native Animated (`useNativeDriver: true`) synchronously stores a `transform` / `opacity` override
    for the view tag (`tagToSynchronousMountProps`).
-2. When that prop is later removed (here, the Home box loses its transform as the screen blurs during
-   navigation), a regular Fabric commit delivers `transform: null` for the same tag.
+2. When that prop is later removed (here, the Home box loses its transform as navigation starts), a
+   regular Fabric commit delivers `transform: null` for the same tag.
 3. `overridePropsReadableMap` re-applies the stored override and asserts the committed value is an
    `Array` / `Number`. The value is `null`, so the assertion fails and the app crashes.
 
