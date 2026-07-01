@@ -61,6 +61,21 @@ which relaxes the assert to also accept `ReadableType.Null`. As of this writing 
 Until it ships, the workaround is to avoid the native-driver `transform` / `opacity` that later gets
 cleared. For a React Navigation native-stack, `animation: 'none'` on Android avoids it.
 
+## Verifying the fix
+
+A standard app consumes React Native as a prebuilt artifact (`com.facebook.react:react-android`), so
+the `SurfaceMountingManager.kt` change from #56913 cannot be applied with `patch-package` alone - those
+sources are not compiled into the app. To watch the crash disappear you need React Native built with
+the patch:
+
+- The upstream PR ships a ready before/after reproduction:
+  [jingjing2222/react-native-fabric-transform-repro](https://github.com/jingjing2222/react-native-fabric-transform-repro)
+  (`repro-crash` vs `repro-patched`, with GIFs).
+- Or build React Native Android from source with #56913 applied and run this app against it.
+
+With the relaxed assert, the stale `transform: null` / `opacity: null` commit is accepted instead of
+asserting, and the stored Native Animated override keeps winning - so the app no longer crashes.
+
 ## Environment
 
 - React Native `0.86.0`, New Architecture (Fabric), Hermes
